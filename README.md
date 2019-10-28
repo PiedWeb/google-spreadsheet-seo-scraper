@@ -13,7 +13,7 @@
 
 Open source excel or libreoffice and PHP SEO google position SERP checker to track and follow a few website's keywords positions.
 
-Homepage : https://piedweb.com/serp
+Homepage : https://piedweb.com/seo/serp
 
 ## Requirements
 
@@ -33,7 +33,7 @@ $ mkdir gs3 && cd gs3
 $ # install the lib via composer
 $ composer require piedweb/google-spreadsheet-seo-scraper
 $ # create a link to the executable
-$ ln -s vendor/piedweb/google-spreadsheet-seo-scraper/scrap.php console
+$ ln -s vendor/piedweb/google-spreadsheet-seo-scraper/scrap.php console && chmod +x console
 ```
 
 ## Usage

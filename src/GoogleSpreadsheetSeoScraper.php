@@ -5,6 +5,7 @@ namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 use rOpenDev\Google\SearchViaCurl;
 use Symfony\Component\Console\Input\ArgvInput;
 use League\Csv\Reader;
+use Exception;
 
 class GoogleSpreadsheetSeoScraper
 {
@@ -19,7 +20,7 @@ class GoogleSpreadsheetSeoScraper
     protected $dir;
 
     /**
-     * @var array
+     * @var \League\Csv\MapIterator
      */
     protected $kws;
 
@@ -39,6 +40,11 @@ class GoogleSpreadsheetSeoScraper
      * @var
      */
     protected $quiet = false;
+
+    /**
+     * @var string
+     */
+    protected $prevError;
 
     public function __construct($argv, string $dir)
     {
@@ -78,9 +84,11 @@ class GoogleSpreadsheetSeoScraper
 
     protected function checkTheSerp()
     {
-        foreach ($this->kws as $kw) {
+        $kwsNbr = iterator_count($this->kws);
+
+        foreach ($this->kws as $i => $kw) {
             // MAYBE WE ever checked the pos
-            if ('' !== $kw['pos'] && 'FAILED' !== $kw['pos']) {
+            if (isset($kw['pos']) && '' !== $kw['pos'] && 'FAILED' !== $kw['pos']) {
                 $this->csvToReturn .= $kw['pos'].',"'.$kw['url'].'"'.chr(10);
             } else {
                 $this->messageForCli($kw['kw'].' ('.$kw['tld'].';'.$kw['hl'].')');
@@ -90,8 +98,7 @@ class GoogleSpreadsheetSeoScraper
                 if ($results) {
                     foreach ($results as $k => $r) {
                         $host = parse_url($r['link'], PHP_URL_HOST);
-                        if (
-                            (isset($r['domain']) && $r['domain'] == $host)
+                        if ((isset($kw['domain']) && $kw['domain'] == $host)
                             || in_array($host, $this->domain)
                         ) {
                             $result = ($k + 1).','.$r['link'].chr(10);
@@ -102,14 +109,17 @@ class GoogleSpreadsheetSeoScraper
                     $this->csvToReturn .= isset($result) ? $result : '"-1",""'.chr(10);
                     unset($result);
                 } else {
-                    $this->messageForCli($Google->getError());
+                    $this->messageForCli('An error occured during the request to Google...'.chr(10).$this->prevError);
                     $this->csvToReturn .= '"FAILED",""'.chr(10);
 
                     return; // quit if we get a captcha ?!
                 }
 
                 $this->messageForCli('------------');
-                sleep($this->arg('--sleep', 40));
+
+                if ($i !== $kwsNbr) {
+                    sleep($this->arg('--sleep', 40));
+                }
             }
         }
     }
@@ -117,7 +127,7 @@ class GoogleSpreadsheetSeoScraper
     protected function messageForCli($msg)
     {
         if (!$this->quiet) {
-            echo $say.chr(10);
+            echo $msg.chr(10);
         }
     }
 
@@ -125,9 +135,9 @@ class GoogleSpreadsheetSeoScraper
     {
         $Google = new SearchViaCurl($kw['kw']);
         $Google
-             ->setTld($kw['tld'])
-             ->setLanguage($kw['hl'])
-             ->setCacheFolder($this->arg('--cache', false))
+             ->setTld($kw['tld'] ?? 'fr')
+             ->setLanguage($kw['hl'] ?? 'fr')
+             ->setCacheFolder($this->arg('--cache', null))
              ->setNbrPage($this->arg('--page', 1))
         ;
 
@@ -138,7 +148,10 @@ class GoogleSpreadsheetSeoScraper
         if (false !== $this->args->getParameterOption('--proxy')) {
             $Google->setProxy($this->args->getParameterOption('--proxy'));
         }
-        $results = $Google->extractResults();
+
+        $this->prevError = $Google->getError();
+
+        return $Google->extractResults();
     }
 
     protected function arg($name, $default)
