@@ -5,3 +5,4 @@ phpcs.xml
 phpunit.xml
 .php_cs.cache
 tmp.csv
+.~lock.kw.ods#
