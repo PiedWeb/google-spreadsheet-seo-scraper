@@ -13,6 +13,8 @@
 
 Open source excel or libreoffice and PHP SEO google position SERP checker to track and follow a few website's keywords positions.
 
+Homepage : https://piedweb.com/serp
+
 ## Requirements
 
 You need to know how to open execute a command on a CLI.
@@ -50,14 +52,27 @@ $ gs3/console
 --num   100 (default, correspond to google num arg)
 --page  1 (default, number of results's page to crawl')
 --sleep 40 (default, time to wayt between to request on google)
+--quiet
 ```
 
-### Example
+### Examples
 
 ```
 $ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain piedweb.com
 
 ```
+
+```
+$ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain piedweb.com,piedweb.fr
+
+```
+
+```
+$ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain "you can set it directly in your ods file for each row"
+
+```
+
+
 
 ☯ Without proxy, I use it for a dozen of keywords.
 
