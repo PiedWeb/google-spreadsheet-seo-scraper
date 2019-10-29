@@ -74,7 +74,14 @@ class GoogleSpreadsheetSeoScraper
 
     protected function extractData()
     {
-        exec('unoconv -o "'.$this->dir.'/tmp.csv" -f csv '.$this->args->getParameterOption('--ods').'');
+        $tmpCsvFile = $this->dir.'/tmp.csv';
+        if (file_exists($this->dir.'/tmp.csv')) {
+            unlink($this->dir.'/tmp.csv');
+        }
+
+        $comand = 'unoconv -o "'.$tmpCsvFile.'" -f csv "'.$this->args->getParameterOption('--ods').'"';
+
+        exec($comand);
 
         $csv = Reader::createFromPath($this->dir.'/tmp.csv', 'r');
         $csv->setHeaderOffset(0);
@@ -96,18 +103,7 @@ class GoogleSpreadsheetSeoScraper
                 $results = $this->getGoogleResults($kw);
 
                 if ($results) {
-                    foreach ($results as $k => $r) {
-                        $host = parse_url($r['link'], PHP_URL_HOST);
-                        if ((isset($kw['domain']) && $kw['domain'] == $host)
-                            || in_array($host, $this->domain)
-                        ) {
-                            $result = ($k + 1).','.$r['link'].chr(10);
-                            break;
-                        }
-                    }
-
-                    $this->csvToReturn .= isset($result) ? $result : '"-1",""'.chr(10);
-                    unset($result);
+                    $this->parseGoogleResults($results, $kw);
                 } else {
                     $this->messageForCli('An error occured during the request to Google...'.chr(10).$this->prevError);
                     $this->csvToReturn .= '"FAILED",""'.chr(10);
@@ -118,10 +114,25 @@ class GoogleSpreadsheetSeoScraper
                 $this->messageForCli('------------');
 
                 if ($i !== $kwsNbr) {
-                    sleep($this->arg('--sleep', 40));
+                    sleep($this->arg('--sleep', 60));
                 }
             }
         }
+    }
+
+    protected function parseGoogleResults($results, $kw)
+    {
+        foreach ($results as $k => $r) {
+            $host = parse_url($r['link'], PHP_URL_HOST);
+            if ((isset($kw['domain']) && $kw['domain'] == $host)
+                || in_array($host, $this->domain)
+            ) {
+                $result = ($k + 1).','.$r['link'].chr(10);
+                break;
+            }
+        }
+
+        $this->csvToReturn .= isset($result) ? $result : '"-1",""'.chr(10);
     }
 
     protected function messageForCli($msg)

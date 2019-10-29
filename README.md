@@ -51,7 +51,7 @@ $ gs3/console
 --cache /my/cache/folder/for/google/result (plain html)
 --num   100 (default, correspond to google num arg)
 --page  1 (default, number of results's page to crawl')
---sleep 40 (default, time to wayt between to request on google)
+--sleep 60 (default, time to wait in seconds between to request on google)
 --quiet
 ```
 
