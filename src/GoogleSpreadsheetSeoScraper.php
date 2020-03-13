@@ -2,10 +2,10 @@
 
 namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 
+use Exception;
+use League\Csv\Reader;
 use rOpenDev\Google\SearchViaCurl;
 use Symfony\Component\Console\Input\ArgvInput;
-use League\Csv\Reader;
-use Exception;
 
 class GoogleSpreadsheetSeoScraper
 {
@@ -41,6 +41,9 @@ class GoogleSpreadsheetSeoScraper
      */
     protected $quiet = false;
 
+    protected $failed = false;
+    protected $id = false;
+
     /**
      * @var string
      */
@@ -49,7 +52,7 @@ class GoogleSpreadsheetSeoScraper
     public function __construct($argv, string $dir)
     {
         $this->dir = $dir;
-
+        $this->id = uniqid('tmp_');
         $this->loadArgv($argv);
         $this->extractData();
     }
@@ -58,10 +61,11 @@ class GoogleSpreadsheetSeoScraper
     {
         $this->args = new ArgvInput($argv);
 
-        if (!$this->args->getParameterOption('--ods') || !$this->args->getParameterOption('--domain')) {
-            throw new Exception('At least 1 parameter is missing : --ods or --domain');
+        if ((!$this->args->getParameterOption('--ods') && !$this->args->getParameterOption('--retry'))
+            || !$this->args->getParameterOption('--domain')) {
+            throw new Exception('At least 1 parameter is missing : --ods, --retry or --domain');
         }
-        if (!file_exists($this->args->getParameterOption('--ods'))) {
+        if (!$this->args->getParameterOption('--retry') && !file_exists($this->args->getParameterOption('--ods'))) {
             throw new Exception('--ods path is not working'.chr(10).chr(10));
         }
 
@@ -74,41 +78,82 @@ class GoogleSpreadsheetSeoScraper
 
     protected function extractData()
     {
-        $tmpCsvFile = $this->dir.'/tmp.csv';
-        if (file_exists($this->dir.'/tmp.csv')) {
-            unlink($this->dir.'/tmp.csv');
+        if ($this->args->getParameterOption('--retry')) {
+            $retryFile = $this->dir.'/var/'.$this->args->getParameterOption('--retry').'.csv';
+            if (!file_exists($retryFile)) {
+                throw new \Exception('Previsous session (`'.$this->args->getParameterOption('--retry').'`) not found');
+            }
+            $csv = Reader::createFromPath($retryFile, 'r');
+        } else {
+            $tmpCsvFile = $this->dir.'/tmp.csv';
+            if (file_exists($this->dir.'/tmp.csv')) {
+                unlink($this->dir.'/tmp.csv');
+            }
+
+            $comand = 'unoconv -o "'.$tmpCsvFile.'" -f csv "'.$this->args->getParameterOption('--ods').'"';
+
+            echo $comand.chr(10);
+            exec($comand, $output);
+            sleep(2);
+            exec($comand);
+            sleep(2);
+
+            $csv = Reader::createFromPath($this->dir.'/tmp.csv', 'r');
         }
 
-        $comand = 'unoconv -o "'.$tmpCsvFile.'" -f csv "'.$this->args->getParameterOption('--ods').'"';
-
-        exec($comand);
-
-        $csv = Reader::createFromPath($this->dir.'/tmp.csv', 'r');
         $csv->setHeaderOffset(0);
 
         $this->kws = $csv->getRecords();
+    }
+
+    protected function addCsvRow($kw, $pos, $url)
+    {
+        $this->csvToReturn .= '"'.$kw['kw'].'","'.$kw['tld'].'","'.$kw['hl'].'",'.$kw['importance'].',';
+        $this->csvToReturn .= '"'.$pos.'","'.$url.'"'.chr(10);
+
+        return $this;
     }
 
     protected function checkTheSerp()
     {
         $kwsNbr = iterator_count($this->kws);
 
+        $this->csvToReturn = 'kw,tld,hl,importance,pos,url'.chr(10);
+
         foreach ($this->kws as $i => $kw) {
+            if (true === $this->failed || empty($kw['kw'])) {
+                $this->addCsvRow($kw, '', '');
+                continue;
+            }
+
+            if (0 == $kw['importance']) { // we don't check some keywords
+                continue;
+            }
+
             // MAYBE WE ever checked the pos
             if (isset($kw['pos']) && '' !== $kw['pos'] && 'FAILED' !== $kw['pos']) {
-                $this->csvToReturn .= $kw['pos'].',"'.$kw['url'].'"'.chr(10);
+                $this->addCsvRow($kw, $kw['pos'], $kw['url']);
             } else {
                 $this->messageForCli($kw['kw'].' ('.$kw['tld'].';'.$kw['hl'].')');
 
                 $results = $this->getGoogleResults($kw);
 
                 if ($results) {
-                    $this->parseGoogleResults($results, $kw);
+                    $this->parseGoogleResults($results, $kw); // update directly CSV
                 } else {
-                    $this->messageForCli('An error occured during the request to Google...'.chr(10).$this->prevError);
-                    $this->csvToReturn .= '"FAILED",""'.chr(10);
-
-                    return; // quit if we get a captcha ?!
+                    $this->messageForCli(
+                        'Session id : '.$this->id
+                        .chr(10).'An error occured during the request to Google...'
+                        .chr(10).$this->prevError
+                        .chr(10).chr(10)
+                        .'Retry command : '
+                        .chr(10).'php scrap --retry '.$this->id
+                        .(isset($this->domain) ? ' --domain '.$this->args->getParameterOption('--domain') : '').chr(10)
+                    );
+                    $this->addCsvRow($kw, 'FAILED', '');
+                    $this->failed = true;
+                    continue;
+                    //return; // quit if we get a captcha ?!
                 }
 
                 $this->messageForCli('------------');
@@ -118,21 +163,30 @@ class GoogleSpreadsheetSeoScraper
                 }
             }
         }
+
+        if (true === $this->failed) {
+            file_put_contents($this->dir.'/var/'.$this->id.'.csv', $this->csvToReturn);
+        }
     }
 
     protected function parseGoogleResults($results, $kw)
     {
+        $result = ['pos' => '-1', 'url' => ''];
+
         foreach ($results as $k => $r) {
             $host = parse_url($r['link'], PHP_URL_HOST);
             if ((isset($kw['domain']) && $kw['domain'] == $host)
                 || in_array($host, $this->domain)
             ) {
-                $result = ($k + 1).','.$r['link'].chr(10);
+                $result = [
+                    'pos' => $k + 1,
+                    'url' => $r['link'],
+                ];
                 break;
             }
         }
 
-        $this->csvToReturn .= isset($result) ? $result : '"-1",""'.chr(10);
+        $this->addCsvRow($kw, $result['pos'], $result['url']);
     }
 
     protected function messageForCli($msg)
@@ -178,6 +232,8 @@ class GoogleSpreadsheetSeoScraper
 
         file_put_contents($this->dir.'/tmp.csv', $this->csvToReturn);
 
-        exec('libreoffice '.$this->dir.'/tmp.csv');
+        if (false === $this->failed) {
+            exec('libreoffice '.$this->dir.'/tmp.csv');
+        }
     }
 }
