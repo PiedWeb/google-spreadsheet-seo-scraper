@@ -17,8 +17,8 @@
     ],
     "require": {
         "php" : "~7.1",
-        "ropendev/google": "^0.0.2",
-        "symfony/console": "^4.3",
+        "ropendev/google": "^0",
+        "symfony/console": "^4",
         "league/csv": "^9.4"
     },
     "require-dev": {
