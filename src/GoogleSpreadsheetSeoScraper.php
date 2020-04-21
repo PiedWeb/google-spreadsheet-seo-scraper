@@ -147,7 +147,7 @@ class GoogleSpreadsheetSeoScraper
                         .chr(10).$this->prevError
                         .chr(10).chr(10)
                         .'Retry command : '
-                        .chr(10).'php scrap --retry '.$this->id
+                        .chr(10).'php scrap.php --retry '.$this->id
                         .(isset($this->domain) ? ' --domain '.$this->args->getParameterOption('--domain') : '').chr(10)
                     );
                     $this->addCsvRow($kw, 'FAILED', '');
