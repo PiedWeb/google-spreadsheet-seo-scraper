@@ -62,9 +62,10 @@ class GoogleSpreadsheetSeoScraper
         $this->args = new ArgvInput($argv);
 
         if ((!$this->args->getParameterOption('--ods') && !$this->args->getParameterOption('--retry'))
-            || !$this->args->getParameterOption('--domain')) {
+        || !$this->args->getParameterOption('--domain')) {
             throw new Exception('At least 1 parameter is missing : --ods, --retry or --domain');
         }
+
         if (!$this->args->getParameterOption('--retry') && !file_exists($this->args->getParameterOption('--ods'))) {
             throw new Exception('--ods path is not working'.chr(10).chr(10));
         }
@@ -76,13 +77,48 @@ class GoogleSpreadsheetSeoScraper
         $this->domain = explode(',', $this->args->getParameterOption('--domain'));
     }
 
+    public function getLastRun(): string
+    {
+        $dataDirectory = $this->dir.'/var';
+
+        $dir = scandir($dataDirectory);
+        $lastRun = null;
+        $lastRunAt = null;
+
+        foreach ($dir as $file) {
+            if ('.' != $file && '..' != $file && !is_dir($dataDirectory.'/'.$file)
+            && filemtime($dataDirectory.'/'.$file) > $lastRunAt) {
+                $lastRun = $file;
+                $lastRunAt = filemtime($dataDirectory.'/'.$file);
+            }
+        }
+
+        if (null === $lastRun) {
+            throw new \Exception('No previous run was found.');
+        }
+        
+        return $lastRun;
+    }
+
+    protected function getRetryFile(): string
+    {
+        if ('last' === $this->args->getParameterOption('--retry')) {
+            $retryFile = $this->dir.'/var/'.$this->getLastRun();
+        } else {
+            $retryFile = $this->dir.'/var/'.$this->args->getParameterOption('--retry').'.csv';
+        }
+
+        if (!file_exists($retryFile)) {
+            throw new \Exception('Previsous session (`'.$this->args->getParameterOption('--retry').'`) not found');
+        }
+
+        return $retryFile;
+    }
+
     protected function extractData()
     {
         if ($this->args->getParameterOption('--retry')) {
-            $retryFile = $this->dir.'/var/'.$this->args->getParameterOption('--retry').'.csv';
-            if (!file_exists($retryFile)) {
-                throw new \Exception('Previsous session (`'.$this->args->getParameterOption('--retry').'`) not found');
-            }
+            $retryFile = $this->getRetryFile();
             $csv = Reader::createFromPath($retryFile, 'r');
         } else {
             $tmpCsvFile = $this->dir.'/tmp.csv';
@@ -176,7 +212,7 @@ class GoogleSpreadsheetSeoScraper
         foreach ($results as $k => $r) {
             $host = parse_url($r['link'], PHP_URL_HOST);
             if ((isset($kw['domain']) && $kw['domain'] == $host)
-                || in_array($host, $this->domain)
+            || in_array($host, $this->domain)
             ) {
                 $result = [
                     'pos' => $k + 1,
@@ -200,10 +236,10 @@ class GoogleSpreadsheetSeoScraper
     {
         $Google = new SearchViaCurl($kw['kw']);
         $Google
-             ->setTld($kw['tld'] ?? 'fr')
-             ->setLanguage($kw['hl'] ?? 'fr')
-             ->setCacheFolder($this->arg('--cache', null))
-             ->setNbrPage($this->arg('--page', 1))
+            ->setTld($kw['tld'] ?? 'fr')
+            ->setLanguage($kw['hl'] ?? 'fr')
+            ->setCacheFolder($this->arg('--cache', null))
+            ->setNbrPage($this->arg('--page', 1))
         ;
 
         if (10 != $this->args->getParameterOption('--num')) {
