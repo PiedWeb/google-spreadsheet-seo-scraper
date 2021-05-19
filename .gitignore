@@ -7,3 +7,4 @@ phpunit.xml
 tmp.csv
 .~lock.kw.ods#
 var
+tmp/*

@@ -27,7 +27,7 @@ No direct support (maybe by a peer), use it as you can or look [my prices](https
 
 Via [Packagist](https://packagist.org/packages/piedweb/google-spreadsheet-seo-scraper)
 
-``` bash
+```bash
 $ # create the folder where you will install the soft
 $ mkdir gs3 && cd gs3
 $ # install the lib via composer
@@ -38,7 +38,7 @@ $ ln -s vendor/piedweb/google-spreadsheet-seo-scraper/scrap.php console && chmod
 
 ## Usage
 
-``` bash
+```bash
 $ gs3/console
     --ods path/to/myfile.ods
     --domain host.tld
@@ -46,7 +46,7 @@ $ gs3/console
 
 ### Facultative args
 
-``` bash
+```bash
 --proxy ip:port:username:pass (without proxy, you can check between 20 and 50 kw)
 --cache /my/cache/folder/for/google/result (plain html)
 --num   100 (default, correspond to google num arg)
@@ -58,25 +58,23 @@ $ gs3/console
 ### Examples
 
 ```
-$ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain piedweb.com
+$ php scrap.php --ods "./kw.ods" --domain piedweb.com
 
 ```
 
 ```
-$ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain piedweb.com,piedweb.fr
+$ php scrap.php --ods "./kw.ods" --domain piedweb.com,piedweb.fr
 
 ```
 
 ```
-$ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain "you can set it directly in your ods file for each row"
+$ php scrap.php --ods "./kw.ods" --domain "you can set it directly in your ods file for each row"
 
 ```
-
-
 
 ☯ Without proxy, I use it for a dozen of keywords.
 
-## About  `kw.ods`
+## About `kw.ods`
 
 > Seule les colonnes jusqu'à J sont importantes.
 > Il est possible d'archiver autant de données que voulues dans les colonnes suivantes à condition de ne pas avoir
@@ -87,8 +85,8 @@ $ php scrap.php --ods "/home/session/project/piedweb.com/seo/kw.ods" --domain "y
 > un internaute utilisant ce mot clef.
 > [Robin Delattre](https://www.robin-d.fr/)
 
-
 Debugging `tendance` formula
+
 ```
 =IF(J6="";"";                   // Si prev_pos est vide alors rien
     IF (J6="FAILED";"";            // Si prev_pos a échoué, alors rien

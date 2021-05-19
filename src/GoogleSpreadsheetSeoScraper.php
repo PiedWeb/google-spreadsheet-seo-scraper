@@ -42,6 +42,7 @@ class GoogleSpreadsheetSeoScraper
     protected $quiet = false;
 
     protected $failed = false;
+
     protected $id = false;
 
     /**
@@ -61,13 +62,13 @@ class GoogleSpreadsheetSeoScraper
     {
         $this->args = new ArgvInput($argv);
 
-        if ((!$this->args->getParameterOption('--ods') && !$this->args->getParameterOption('--retry'))
-        || !$this->args->getParameterOption('--domain')) {
+        if ((! $this->args->getParameterOption('--ods') && ! $this->args->getParameterOption('--retry'))
+        || ! $this->args->getParameterOption('--domain')) {
             throw new Exception('At least 1 parameter is missing : --ods, --retry or --domain');
         }
 
-        if (!$this->args->getParameterOption('--retry') && !file_exists($this->args->getParameterOption('--ods'))) {
-            throw new Exception('--ods path is not working'.chr(10).chr(10));
+        if (! $this->args->getParameterOption('--retry') && ! file_exists($this->args->getParameterOption('--ods'))) {
+            throw new Exception('--ods path is not working'.\chr(10).\chr(10));
         }
 
         if ($this->args->getParameterOption('--quiet')) {
@@ -86,7 +87,7 @@ class GoogleSpreadsheetSeoScraper
         $lastRunAt = null;
 
         foreach ($dir as $file) {
-            if ('.' != $file && '..' != $file && !is_dir($dataDirectory.'/'.$file)
+            if ('.' != $file && '..' != $file && ! is_dir($dataDirectory.'/'.$file)
             && filemtime($dataDirectory.'/'.$file) > $lastRunAt) {
                 $lastRun = $file;
                 $lastRunAt = filemtime($dataDirectory.'/'.$file);
@@ -96,7 +97,7 @@ class GoogleSpreadsheetSeoScraper
         if (null === $lastRun) {
             throw new \Exception('No previous run was found.');
         }
-        
+
         return $lastRun;
     }
 
@@ -108,34 +109,37 @@ class GoogleSpreadsheetSeoScraper
             $retryFile = $this->dir.'/var/'.$this->args->getParameterOption('--retry').'.csv';
         }
 
-        if (!file_exists($retryFile)) {
+        if (! file_exists($retryFile)) {
             throw new \Exception('Previsous session (`'.$this->args->getParameterOption('--retry').'`) not found');
         }
 
         return $retryFile;
     }
 
-    protected function extractData()
+    private function getCsv(): Reader
     {
         if ($this->args->getParameterOption('--retry')) {
             $retryFile = $this->getRetryFile();
-            $csv = Reader::createFromPath($retryFile, 'r');
-        } else {
-            $tmpCsvFile = $this->dir.'/tmp.csv';
-            if (file_exists($this->dir.'/tmp.csv')) {
-                unlink($this->dir.'/tmp.csv');
-            }
 
-            $comand = 'unoconv -o "'.$tmpCsvFile.'" -f csv "'.$this->args->getParameterOption('--ods').'"';
-
-            echo $comand.chr(10);
-            exec($comand, $output);
-            sleep(2);
-            exec($comand);
-            sleep(2);
-
-            $csv = Reader::createFromPath($this->dir.'/tmp.csv', 'r');
+            return Reader::createFromPath($retryFile, 'r');
         }
+
+        $tmpCsvDir = $this->dir.'/tmp';
+
+        //$comand = 'unoconv -o "'.$tmpCsvFile.'" -f csv "'.$this->args->getParameterOption('--ods').'"';
+        $comand = 'libreoffice --nolockcheck --convert-to csv:"Text - txt - csv (StarCalc)":44,34,76 --outdir "'.$tmpCsvDir.'" "'.$this->args->getParameterOption('--ods').'"';
+        exec($comand);
+        //dd($comand);
+
+        $files = scandir($tmpCsvDir, \SCANDIR_SORT_DESCENDING);
+        $lastConvertedFile = $files[0];
+
+        return Reader::createFromPath($tmpCsvDir.'/'.$lastConvertedFile, 'r');
+    }
+
+    protected function extractData()
+    {
+        $csv = $this->getCsv();
 
         $csv->setHeaderOffset(0);
 
@@ -145,7 +149,7 @@ class GoogleSpreadsheetSeoScraper
     protected function addCsvRow($kw, $pos, $url)
     {
         $this->csvToReturn .= '"'.$kw['kw'].'","'.$kw['tld'].'","'.$kw['hl'].'",'.$kw['importance'].',';
-        $this->csvToReturn .= '"'.$pos.'","'.$url.'"'.chr(10);
+        $this->csvToReturn .= '"'.$pos.'","'.$url.'"'.\chr(10);
 
         return $this;
     }
@@ -154,11 +158,12 @@ class GoogleSpreadsheetSeoScraper
     {
         $kwsNbr = iterator_count($this->kws);
 
-        $this->csvToReturn = 'kw,tld,hl,importance,pos,url'.chr(10);
+        $this->csvToReturn = 'kw,tld,hl,importance,pos,url'.\chr(10);
 
         foreach ($this->kws as $i => $kw) {
             if (true === $this->failed || empty($kw['kw'])) {
                 $this->addCsvRow($kw, '', '');
+
                 continue;
             }
 
@@ -179,15 +184,16 @@ class GoogleSpreadsheetSeoScraper
                 } else {
                     $this->messageForCli(
                         'Session id : '.$this->id
-                        .chr(10).'An error occured during the request to Google...'
-                        .chr(10).$this->prevError
-                        .chr(10).chr(10)
+                        .\chr(10).'An error occured during the request to Google...'
+                        .\chr(10).$this->prevError
+                        .\chr(10).\chr(10)
                         .'Retry command : '
-                        .chr(10).'php scrap.php --retry '.$this->id
-                        .(isset($this->domain) ? ' --domain '.$this->args->getParameterOption('--domain') : '').chr(10)
+                        .\chr(10).'php scrap.php --retry '.$this->id
+                        .(isset($this->domain) ? ' --domain '.$this->args->getParameterOption('--domain') : '').\chr(10)
                     );
                     $this->addCsvRow($kw, 'FAILED', '');
                     $this->failed = true;
+
                     continue;
                     //return; // quit if we get a captcha ?!
                 }
@@ -210,14 +216,15 @@ class GoogleSpreadsheetSeoScraper
         $result = ['pos' => '-1', 'url' => ''];
 
         foreach ($results as $k => $r) {
-            $host = parse_url($r['link'], PHP_URL_HOST);
+            $host = parse_url($r['link'], \PHP_URL_HOST);
             if ((isset($kw['domain']) && $kw['domain'] == $host)
-            || in_array($host, $this->domain)
+            || \in_array($host, $this->domain)
             ) {
                 $result = [
                     'pos' => $k + 1,
                     'url' => $r['link'],
                 ];
+
                 break;
             }
         }
@@ -227,8 +234,8 @@ class GoogleSpreadsheetSeoScraper
 
     protected function messageForCli($msg)
     {
-        if (!$this->quiet) {
-            echo $msg.chr(10);
+        if (! $this->quiet) {
+            echo $msg.\chr(10);
         }
     }
 
@@ -240,6 +247,7 @@ class GoogleSpreadsheetSeoScraper
             ->setLanguage($kw['hl'] ?? 'fr')
             ->setCacheFolder($this->arg('--cache', null))
             ->setNbrPage($this->arg('--page', 1))
+            ->setMobile(true)
         ;
 
         if (10 != $this->args->getParameterOption('--num')) {
@@ -250,9 +258,10 @@ class GoogleSpreadsheetSeoScraper
             $Google->setProxy($this->args->getParameterOption('--proxy'));
         }
 
+        $result = $Google->extractResults();
         $this->prevError = $Google->getError();
 
-        return $Google->extractResults();
+        return $result;
     }
 
     protected function arg($name, $default)
