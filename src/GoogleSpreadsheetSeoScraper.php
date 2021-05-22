@@ -45,6 +45,8 @@ class GoogleSpreadsheetSeoScraper
 
     protected $id = false;
 
+    protected bool $previousRequestUsedCache = false;
+
     /**
      * @var string
      */
@@ -200,7 +202,7 @@ class GoogleSpreadsheetSeoScraper
 
                 $this->messageForCli('------------');
 
-                if ($i !== $kwsNbr) {
+                if ($i !== $kwsNbr && ! $this->previousRequestUsedCache) {
                     sleep($this->arg('--sleep', 60));
                 }
             }
@@ -260,6 +262,8 @@ class GoogleSpreadsheetSeoScraper
 
         $result = $Google->extractResults();
         $this->prevError = $Google->getError();
+
+        $this->previousRequestUsedCache = $Google->previousRequestUsedCache();
 
         return $result;
     }
