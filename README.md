@@ -4,24 +4,21 @@
 
 # Google Spreadsheet Seo Scraper
 
-[![Latest Version](https://img.shields.io/github/tag/PiedWeb/GoogleSpreadsheetSeoScraper.svg?style=flat&label=release)](https://github.com/PiedWeb/GoogleSpreadsheetSeoScraper/tags)
+[![Latest Version](https://img.shields.io/github/tag/PiedWeb/PiedWeb.svg?style=flat&label=release)](https://github.com/PiedWeb/PiedWeb/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
-[![Build Status](https://img.shields.io/travis/PiedWeb/GoogleSpreadsheetSeoScraper/master.svg?style=flat)](https://travis-ci.org/PiedWeb/GoogleSpreadsheetSeoScraper)
-[![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/GoogleSpreadsheetSeoScraper.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/GoogleSpreadsheetSeoScraper)
-[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/PiedWeb/GoogleSpreadsheetSeoScraper.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/GoogleSpreadsheetSeoScraper/code-structure)
+[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/PiedWeb/PiedWeb/Tests?label=tests)](https://github.com/PiedWeb/PiedWeb/actions)
+[![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/PiedWeb.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/PiedWeb)
+[![Code Coverage](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main)
+[![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
 [![Total Downloads](https://img.shields.io/packagist/dt/piedweb/google-spreadsheet-seo-scraper.svg?style=flat)](https://packagist.org/packages/piedweb/google-spreadsheet-seo-scraper)
 
-Open source excel or libreoffice and PHP SEO google position SERP checker to track and follow a few website's keywords positions.
+Open source excel/libreoffice and PHP SEO google position SERP checker to track and follow a few website's keywords positions.
 
 Homepage : https://piedweb.com/seo/serp
 
 ## Requirements
 
-You need to know how to open execute a command on a CLI.
-
-You need **PHP**, **CURL**, **composer**, **unoconv** and **libreoffice** on your computer.
-
-No direct support (maybe by a peer), use it as you can or look [my prices](https://piedweb.com/#devis).
+**PHP**, **CURL**, **composer**, **unoconv** and **libreoffice**
 
 ## Install
 
@@ -49,8 +46,8 @@ $ gs3/console
 ```bash
 --proxy ip:port:username:pass (without proxy, you can check between 20 and 50 kw)
 --cache /my/cache/folder/for/google/result (plain html)
---num   100 (default, correspond to google num arg)
---page  1 (default, number of results's page to crawl')
+--num-100 per default, the script check only the first result page.
+          Using it permit to check the 100st results if the domain was not found
 --sleep 60 (default, time to wait in seconds between to request on google)
 --quiet
 ```
@@ -72,8 +69,6 @@ $ php scrap.php --ods "./kw.ods" --domain "you can set it directly in your ods f
 
 ```
 
-☯ Without proxy, I use it for a dozen of keywords.
-
 ## About `kw.ods`
 
 > Seule les colonnes jusqu'à J sont importantes.
@@ -81,8 +76,6 @@ $ php scrap.php --ods "./kw.ods" --domain "you can set it directly in your ods f
 > deux colonnes portant le même nom.
 > le doc peut être agrémenter de plusieurs feuilles à condition que la feuille par défaut reste la première.
 
-> L'**importance** est un indicateur subjectif entre 1 et 10 couplant le volume du mot clef et la capacité estimée de transformer
-> un internaute utilisant ce mot clef.
 > [Robin Delattre](https://www.robin-d.fr/)
 
 Debugging `tendance` formula
@@ -118,14 +111,3 @@ x : le site n'est pas possitionnent
 
 - [PiedWeb](https://piedweb.com)
 - [All Contributors](https://github.com/PiedWeb/GoogleSpreadsheetSeoScraper/graphs/contributors)
-
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE) for more information.
-
-[![Latest Version](https://img.shields.io/github/tag/PiedWeb/GoogleSpreadsheetSeoScraper.svg?style=flat&label=release)](https://github.com/PiedWeb/GoogleSpreadsheetSeoScraper/tags)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
-[![Build Status](https://img.shields.io/travis/PiedWeb/GoogleSpreadsheetSeoScraper/master.svg?style=flat)](https://travis-ci.org/PiedWeb/GoogleSpreadsheetSeoScraper)
-[![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/GoogleSpreadsheetSeoScraper.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/GoogleSpreadsheetSeoScraper)
-[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/PiedWeb/GoogleSpreadsheetSeoScraper.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/GoogleSpreadsheetSeoScraper/code-structure)
-[![Total Downloads](https://img.shields.io/packagist/dt/piedweb/google-spreadsheet-seo-scraper.svg?style=flat)](https://packagist.org/packages/piedweb/google-spreadsheet-seo-scraper)
