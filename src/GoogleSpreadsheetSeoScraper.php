@@ -41,6 +41,8 @@ class GoogleSpreadsheetSeoScraper
     /** @var string[] */
     private array $proxies = [];
 
+    private int $attempt = 1;
+
     /**
      * @param array<mixed> $argv
      */
@@ -304,6 +306,15 @@ class GoogleSpreadsheetSeoScraper
             if ($this->args->getParameterOption('--proxy')) {
                 $this->messageForCli('Proxy `'.$this->proxies[0].'` looks like dead');
                 unset($this->proxies[0]);
+
+                return $this->getGoogleResults($kw, $num);
+            }
+
+            if (1 === $this->attempt) {
+                ++$this->attempt;
+                $this->messageForCli('First attempt failed...');
+                $this->messageForCli('New try in '.$this->arg('--sleep', 60).' seconds...');
+                sleep(\intval($this->arg('--sleep', 60)));
 
                 return $this->getGoogleResults($kw, $num);
             }
