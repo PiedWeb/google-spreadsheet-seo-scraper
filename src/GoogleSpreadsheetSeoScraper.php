@@ -2,9 +2,7 @@
 
 namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 
-use Exception;
 use League\Csv\Reader;
-use LogicException;
 use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Extractor\SERPExtractor;
 use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
@@ -69,11 +67,11 @@ class GoogleSpreadsheetSeoScraper
         $domain = $this->args->getParameterOption('--domain', '');
 
         if (('' === $ods && ! $retry) || '' === $domain) {
-            throw new Exception('At least 1 parameter is missing : --ods, --retry or --domain');
+            throw new \Exception('At least 1 parameter is missing : --ods, --retry or --domain');
         }
 
         if (! $retry && \is_string($ods) && ! file_exists($ods)) {
-            throw new Exception('--ods path is not working'.\chr(10).\chr(10));
+            throw new \Exception('--ods path is not working'.\chr(10).\chr(10));
         }
 
         if ($this->args->getParameterOption('--quiet')) {
@@ -140,7 +138,7 @@ class GoogleSpreadsheetSeoScraper
             return Reader::createFromPath($retryFile, 'r');
         }
 
-        throw new LogicException();
+        throw new \LogicException();
     }
 
     protected function extractData(): void
@@ -157,7 +155,7 @@ class GoogleSpreadsheetSeoScraper
         $kws = $csv->getRecords();
         foreach ($kws as $k => $kw) {
             if (! \is_array($kw) || ! \is_string($kw['kw'] ?? null) || ! \is_string($kw['tld'] ?? null) || ! \is_string($kw['hl'] ?? null) || ! \is_string($kw['pos'] ?? null) || ! \is_string($kw['url'] ?? null)) {
-                throw new Exception('CSV is not containing kw,tld,hl,pos,url columns or one of them.');
+                throw new \Exception('CSV is not containing kw,tld,hl,pos,url columns or one of them.');
             }
 
             $this->kws[$k] = [
@@ -291,7 +289,7 @@ class GoogleSpreadsheetSeoScraper
             shuffle($this->proxies);
             $proxy = $this->proxies[0] ?? null;
             if (null === $proxy) {
-                throw new Exception('Proxies are running out of stock');
+                throw new \Exception('Proxies are running out of stock');
             }
 
             $this->messageForCli('Using proxy '.$proxy.'');
@@ -345,7 +343,7 @@ class GoogleSpreadsheetSeoScraper
 
             file_put_contents($this->dir.'/var/'.$this->id.'.csv', $this->csvToReturn);
 
-            throw new Exception('no google result, try using a proxy or check the keyword');
+            throw new \Exception('no google result, try using a proxy or check the keyword');
         }
 
         return $result;
