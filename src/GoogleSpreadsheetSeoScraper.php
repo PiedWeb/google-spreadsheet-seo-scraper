@@ -315,7 +315,7 @@ class GoogleSpreadsheetSeoScraper
         $this->previousRequestUsedCache = true;
         if (($rawHtml = $Google->getCache()) === null) {
             $this->messageForCli('Requesting Google with Curl');
-            $rawHtml = (new GoogleRequester())->requestGoogleWithCurl($Google, [$this, 'manageProxy']);
+            $rawHtml = (new GoogleRequester())->requestGoogleWithCurl($Google, $this->manageProxy(...));
             $Google->setCache($rawHtml);
             $this->previousRequestUsedCache = false;
         }
