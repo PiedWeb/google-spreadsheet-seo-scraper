@@ -18,7 +18,7 @@ class GoogleSpreadsheetSeoScraper
     protected string $dir;
 
     /** @var array<array{'kw': string, 'tld': string, 'hl': string, 'pos':string, 'url':string, 'domain': string}> */
-    protected array $kws;
+    protected array $kws = [];
 
     protected string $csvToReturn = '';
 
@@ -92,7 +92,7 @@ class GoogleSpreadsheetSeoScraper
         $dataDirectory = $this->dir.'/var';
 
         $files = \Safe\glob($dataDirectory.'/*');
-        usort($files, fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
+        usort($files, static fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
 
         return $files[0] ?? '';
     }
@@ -124,7 +124,7 @@ class GoogleSpreadsheetSeoScraper
         exec($comand);
 
         $files = \Safe\glob($tmpCsvDir.'/*');
-        usort($files, fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
+        usort($files, static fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
         $lastConvertedFile = $files[0];
 
         return Reader::createFromPath($lastConvertedFile, 'r');
@@ -152,6 +152,7 @@ class GoogleSpreadsheetSeoScraper
 
         $csv = $this->getCsv();
         $csv->setHeaderOffset(0);
+
         $kws = $csv->getRecords();
         foreach ($kws as $k => $kw) {
             if (! \is_array($kw) || ! \is_string($kw['kw'] ?? null) || ! \is_string($kw['tld'] ?? null) || ! \is_string($kw['hl'] ?? null) || ! \is_string($kw['pos'] ?? null) || ! \is_string($kw['url'] ?? null)) {
@@ -221,7 +222,7 @@ class GoogleSpreadsheetSeoScraper
                 $this->messageForCli('------------');
 
                 if ($i !== $kwsNbr && ! $this->previousRequestUsedCache) {
-                    sleep((int) $this->arg('--sleep', 60));
+                    sleep((int) $this->arg('--sleep', 60)); // @phpstan-ignore-line
                 }
             }
         }
@@ -336,7 +337,7 @@ class GoogleSpreadsheetSeoScraper
                 ++$this->attempt;
                 $this->messageForCli('First attempt failed...');
                 $this->messageForCli('New try in '.$this->arg('--sleep', 60).' seconds...');
-                sleep((int) $this->arg('--sleep', 60));
+                sleep((int) $this->arg('--sleep', 60)); // @phpstan-ignore-line
 
                 return $this->getGoogleResults($kw, $num);
             }
