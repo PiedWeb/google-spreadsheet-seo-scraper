@@ -92,7 +92,7 @@ class GoogleSpreadsheetSeoScraper
         $dataDirectory = $this->dir.'/var';
 
         $files = \Safe\glob($dataDirectory.'/*');
-        usort($files, fn ($a, $b): int => \intval(filemtime($a) < filemtime($b)));
+        usort($files, fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
 
         return $files[0] ?? '';
     }
@@ -124,7 +124,7 @@ class GoogleSpreadsheetSeoScraper
         exec($comand);
 
         $files = \Safe\glob($tmpCsvDir.'/*');
-        usort($files, fn ($a, $b): int => \intval(filemtime($a) < filemtime($b)));
+        usort($files, fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
         $lastConvertedFile = $files[0];
 
         return Reader::createFromPath($lastConvertedFile, 'r');
@@ -221,7 +221,7 @@ class GoogleSpreadsheetSeoScraper
                 $this->messageForCli('------------');
 
                 if ($i !== $kwsNbr && ! $this->previousRequestUsedCache) {
-                    sleep(\intval($this->arg('--sleep', 60)));
+                    sleep((int) $this->arg('--sleep', 60));
                 }
             }
         }
@@ -336,7 +336,7 @@ class GoogleSpreadsheetSeoScraper
                 ++$this->attempt;
                 $this->messageForCli('First attempt failed...');
                 $this->messageForCli('New try in '.$this->arg('--sleep', 60).' seconds...');
-                sleep(\intval($this->arg('--sleep', 60)));
+                sleep((int) $this->arg('--sleep', 60));
 
                 return $this->getGoogleResults($kw, $num);
             }
